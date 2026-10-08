@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title> </title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 22px;
+    background: var(--bg, #f7f4ee);
+    color: var(--ink, #1c1915);
+    transition: background .2s linear;
+  }
+  main { max-width: 36rem; }
+  .icon {
+    font-size: 2.4rem;
+    line-height: 1;
+    margin: 0 0 16px;
+  }
+  p {
+    margin: 0;
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    font-size: clamp(1.32rem, 4.5vw, 1.8rem);
+    line-height: 1.38;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="icon" id="icon" aria-hidden="true"></div>
+  <p id="p"></p>
+</main>
+<script>
+const TONES = {
+  care:    { bg: "#f6efe4", ink: "#3f2a1d", icon: "☕" },
+  nudge:   { bg: "#f8ead3", ink: "#6a3b12", icon: "⚠️" },
+  lead:    { bg: "#e7eef3", ink: "#1d3344", icon: "📋" },
+  rule:    { bg: "#f3e7dc", ink: "#7a2e12", icon: "📒" },
+  newyear: { bg: "#1d2433", ink: "#f3e6c4", icon: "✨" },
+  kings:   { bg: "#f6e7c1", ink: "#6b4512", icon: "👑" },
+  candle:  { bg: "#f8edd8", ink: "#5c3b16", icon: "🕯️" },
+  carnival:{ bg: "#fde8c8", ink: "#7a3412", icon: "🎭" },
+  easter:  { bg: "#f3eadf", ink: "#5b4636", icon: "🥚" },
+  fish:    { bg: "#e5f2f6", ink: "#1d4e63", icon: "🐟" },
+  labour:  { bg: "#f8e4e4", ink: "#7f1d1d", icon: "🌷" },
+  victory: { bg: "#e7efe4", ink: "#243628", icon: "🕊️" },
+  ascent:  { bg: "#e7f0ea", ink: "#1e3d32", icon: "🌤️" },
+  music:   { bg: "#f3e8f6", ink: "#4a235a", icon: "🎵" },
+  bastille:{ bg: "#f4ece4", ink: "#1e3a5f", icon: "🇫🇷" },
+  august:  { bg: "#eef3ea", ink: "#2c3b28", icon: "🌿" },
+  saints:  { bg: "#ece7f2", ink: "#3d3154", icon: "🪻" },
+  armistice:{ bg: "#e8e6ef", ink: "#2c3148", icon: "🌼" },
+  xmas:    { bg: "#1f3a2e", ink: "#f4efe4", icon: "⭐" },
+  eve:     { bg: "#243044", ink: "#f6e7b8", icon: "🥂" }
+};
+
+function phrase(tone, text, icon) {
+  return { tone, text, icon: icon || TONES[tone].icon };
+}
+
+const GENERAL = [
+  phrase("care", "Respire. Le dégagement bloqué par le carton « juste deux minutes » ne respire pas, lui."),
+  phrase("nudge", "Tu fais de ton mieux. Ton mieux inclut quand même de ne pas caler la porte coupe-feu."),
+  phrase("care", "Courage. Personne ne te demande d’être un héros. On te demande que l’issue s’ouvre dans le sens de la fuite."),
+  phrase("nudge", "C’est dur, on sait. C’est encore plus dur d’expliquer pourquoi le BAES clignote depuis mars."),
+  phrase("rule", "Tu n’es pas en retard. Le registre, si. Une phrase douce, une réalité administrative."),
+  phrase("rule", "On croit en toi. On croit aussi que l’effectif théorique n’est pas une suggestion de l’arrêté du 25 juin 1980."),
+  phrase("nudge", "Prends une pause. Pas dans la circulation. Elle n’est pas un salon."),
+  phrase("nudge", "Tu gères. Le désenfumage aimerait être géré aussi, mais sans rancune."),
+  phrase("rule", "Belle énergie. Canalise-la vers l’extincteur qui n’a pas vu sa vérification annuelle. MS 38 te salue."),
+  phrase("care", "Tu as le droit d’être fatigué. Pas celui de laisser le public découvrir l’issue en même temps que la fumée."),
+  phrase("nudge", "Souris. Puis vérifie que la porte n’est pas verrouillée dans le sens de l’évacuation."),
+  phrase("nudge", "On est fiers de toi. Un peu moins du stockage devant le RIA."),
+  phrase("rule", "Tu n’es pas seul. L’arrêté du 25 juin 1980 modifié est avec toi, et il est moins flexible que ton planning."),
+  phrase("lead", "Objectif du jour : une seule chose impeccable. Le plan à jour, par exemple. Pas le mug."),
+  phrase("care", "La motivation vient en faisant. La ronde aussi. Étonnant, non."),
+  phrase("lead", "Tu peux déléguer la ronde. Tu ne peux pas déléguer le fait de savoir ce qu’elle a trouvé."),
+  phrase("lead", "Un briefing de quatre lignes suffit. Effectif, travaux, moyens hors service, point sensible. Le roman, c’est pour après."),
+  phrase("lead", "Corrige le geste maintenant. Le mail de vendredi n’ouvrira pas la porte à ta place."),
+  phrase("lead", "L’agent qui signale un écart n’est pas négatif. Celui qui n’en voit jamais regarde surtout ailleurs."),
+  phrase("lead", "La relève n’est pas un au revoir. C’est le moment où tu cesses d’être responsable. Dis-le."),
+  phrase("lead", "Manager, c’est empêcher que l’urgence soit une surprise. Le reste, c’est de la réunion."),
+  phrase("rule", "SSIAP 1, avec affection : prévention, alerte, évacuation, première intervention, assistance, poste. L’arrêté du 2 mai 2005 n’a pas ajouté « et le standard »."),
+  phrase("lead", "SSIAP 2 : tu encadres, tu formes, tu diriges le poste si ça tourne mal. Le titre ne remplace pas la présence."),
+  phrase("lead", "SSIAP 3 : tu conseilles le chef d’établissement. Un conseil non écrit est un conseil qui n’a pas existé."),
+  phrase("rule", "Le badge ne qualifie personne. L’arrêté du 2 mai 2005, si. Nuance cruelle, mais stable."),
+  phrase("rule", "Le recyclage n’est pas une option bien-être. Sans lui, la qualification ne t’autorise plus à être là."),
+  phrase("rule", "Le 25 juin 1980 s’occupe du bâtiment. Le 2 mai 2005 s’occupe des gens qui le surveillent. Ils ne se remplacent pas."),
+  phrase("nudge", "Une porte coupe-feu ouverte en permanence est une opinion. Le règlement a déjà voté contre."),
+  phrase("care", "Tu n’as pas à sauver la boîte. Tu as à laisser le prochain trouver les clés, le plan et un poste allumé."),
+  phrase("nudge", "Si tu doutes, tu ralentis. L’arrêté, lui, ne doute pas.")
+];
+
+const EVENTS = {
+  newyear: [
+    phrase("newyear", "Bonne année. Les dégagements, eux, n’ont pas pris de résolution : ils étaient déjà censés rester libres."),
+    phrase("newyear", "Nouveau départ, même registre. L’arrêté du 25 juin 1980 n’a pas été abrogé à minuit."),
+    phrase("newyear", "On te souhaite douze mois tenables. Et une relève qui trouve le poste allumé dès janvier.")
+  ],
+  kings: [
+    phrase("kings", "Aujourd’hui, la fève. Toute l’année, la responsabilité. L’arrêté du 2 mai 2005 ne couronne personne par hasard."),
+    phrase("kings", "Tire ta part. Pas dans le sens « je laisse le carton dans la circulation »."),
+    phrase("kings", "Roi ou pas, la porte coupe-feu ne se cale pas. Même avec une couronne en papier.")
+  ],
+  candle: [
+    phrase("candle", "Chandeleur : des crêpes, pas des bougies oubliées près d’un stockage. L’arrêté du 25 juin 1980 déteste le folklore inflammable."),
+    phrase("candle", "On retourne la crêpe. On ne retourne pas le sens d’ouverture d’une issue."),
+    phrase("candle", "Lumière douce, contrôle sérieux. Un BAES en défaut n’est pas une ambiance de chandeleur.")
+  ],
+  carnival: [
+    phrase("carnival", "Mardi gras. Les déguisements oui, les issues masquées non."),
+    phrase("carnival", "Confettis autorisés dans la tête. Pas dans le désenfumage."),
+    phrase("carnival", "Fais la fête sans caler une porte coupe-feu. Le carême du règlement, lui, ne s’arrête pas demain.")
+  ],
+  easter: [
+    phrase("easter", "Pâques. On cherche les œufs, pas la sortie. Si les deux se confondent, l’arrêté du 25 juin 1980 s’inquiète."),
+    phrase("easter", "Cloches ou pas, l’évacuation reste en bon ordre. Le lapin n’est pas un moyen de secours."),
+    phrase("easter", "Joyeuses Pâques. Le registre n’a pas pris de congés, lui. Cruelle fidélité.")
+  ],
+  eastermon: [
+    phrase("easter", "Lundi de Pâques. Jour férié pour beaucoup, pas pour une porte qui devrait s’ouvrir dans le sens de la fuite."),
+    phrase("easter", "Repose-toi si tu peux. Celui qui est de service garde les dégagements, même un lundi de chocolat.")
+  ],
+  fish: [
+    phrase("fish", "Poisson d’avril accepté. Fausse issue de secours, non. L’humour a une limite, elle est dans le règlement."),
+    phrase("fish", "Tu peux coller un poisson dans le dos d’un collègue. Pas sur un BAES."),
+    phrase("fish", "La blague du jour : « le registre est à jour ». Si c’est vrai, ce n’est plus une blague. Bravo.")
+  ],
+  labour: [
+    phrase("labour", "1er mai. Le travail a un jour pour lui. La sécurité incendie, tous les autres, arrêté du 25 juin 1980 à l’appui."),
+    phrase("labour", "Brin de muguet, et un effectif de poste conforme à l’arrêté du 2 mai 2005. Les deux portent bonheur, un seul est obligatoire."),
+    phrase("labour", "Fête du Travail. Ironie douce : aujourd’hui encore, quelqu’un surveille que les autres puissent sortir.")
+  ],
+  victory: [
+    phrase("victory", "8 mai. La victoire de 1945 se commémore. Une issue libre, ça se vérifie. Les deux méritent qu’on s’arrête."),
+    phrase("victory", "On se souvient. On n’en profite pas pour entreposer « temporairement » dans une circulation."),
+    phrase("victory", "Jour de mémoire. Le registre, lui, est une mémoire plus modeste, et il attend encore ta ligne.")
+  ],
+  ascent: [
+    phrase("ascent", "Ascension. On lève les yeux, puis on les ramène sur le dégagement. L’arrêté préfère le second mouvement."),
+    phrase("ascent", "Jour férié mobile, obligation immobile : les moyens de secours restent accessibles."),
+    phrase("ascent", "Monte si tu veux. Descends par l’escalier prévu, pas par une idée.")
+  ],
+  whit: [
+    phrase("ascent", "Pentecôte. Esprit d’équipe bienvenu. Esprit « on cale la porte, il fait chaud », moins."),
+    phrase("ascent", "Lundi de Pentecôte ou pas, le SSIAP prévu par l’arrêté du 2 mai 2005 n’est pas une option de calendrier.")
+  ],
+  music: [
+    phrase("music", "Fête de la musique. Le son oui, le blocage des issues non. L’arrêté du 25 juin 1980 n’a pas de playlist."),
+    phrase("music", "Ambiance autorisée. Un RIA décoré en enceinte, non."),
+    phrase("music", "Joue fort. Laisse l’alarme plus forte que toi, c’est elle qui a le dernier mot.")
+  ],
+  bastille: [
+    phrase("bastille", "14 juillet. On commémore une prise. On ne prend pas les dégagements pour du stockage."),
+    phrase("bastille", "Feu d’artifice dehors. À l’intérieur, l’arrêté du 25 juin 1980 a déjà un avis sur le feu."),
+    phrase("bastille", "Bleu, blanc, rouge. Et un balisage visible. La fête nationale n’abroge pas l’éclairage de sécurité."),
+    phrase("bastille", "Liberté, égalité, issues dégagées. La troisième n’est pas dans la devise, elle est dans le règlement.")
+  ],
+  august: [
+    phrase("august", "15 août. Beaucoup sont partis. Les portes coupe-feu, non. Elles restent en poste."),
+    phrase("august", "Assomption : on lève les yeux au ciel, pas les exigences de l’arrêté du 25 juin 1980."),
+    phrase("august", "Effectif d’été réduit, vigilance non négociable. L’arrêté du 2 mai 2005 n’a pas de chapitre vacances.")
+  ],
+  saints: [
+    phrase("saints", "Toussaint. On fleurit les mémoires. On ne fleurit pas une issue au point de la cacher."),
+    phrase("saints", "Jour calme en apparence. Le registre, lui, n’est pas un chrysanthème : il se tient à jour."),
+    phrase("saints", "Pensée pour ceux qui ne sont plus là. Et pour ceux qui sont de service, et qui gardent les cheminements libres.")
+  ],
+  armistice: [
+    phrase("armistice", "11 novembre. On se tait une minute. On ne se tait pas sur une alarme."),
+    phrase("armistice", "Le bleuet se porte. Le dégagement, lui, ne porte rien : pas de carton, pas de cadeau, pas d’exception."),
+    phrase("armistice", "Armistice. La paix du bâtiment, c’est une issue qui s’ouvre et des secours qui peuvent entrer."),
+    phrase("armistice", "Commémorer, c’est se souvenir. Consigner, c’est permettre à quelqu’un de se souvenir à ta place.")
+  ],
+  xmasEve: [
+    phrase("xmas", "Veille de Noël. Les guirlandes ne remplacent pas le balisage, et l’arrêté du 25 juin 1980 n’a pas d’esprit de Noël."),
+    phrase("xmas", "Sapin autorisé s’il ne mange pas une circulation. Il a déjà assez mangé cette année."),
+    phrase("xmas", "Ce soir on veille. Toute l’année aussi, mais avec moins de paillettes et plus de registre.")
+  ],
+  xmas: [
+    phrase("xmas", "Joyeux Noël. Le cadeau utile : une issue libre et un poste qu’on comprend sans mode d’emploi."),
+    phrase("xmas", "Les cloches, c’est joli. L’alarme, c’est prioritaire. Désolé pour la magie."),
+    phrase("xmas", "Paix sur les bureaux, et surtout pas de stockage dans les dégagements. L’arrêté du 25 juin 1980 joue les Grincheux, assumé."),
+    phrase("xmas", "Si tu es de service le 25, quelqu’un pensera à toi en ouvrant un cadeau. Toi, pense à la ronde. Échange équitable.")
+  ],
+  sylvestre: [
+    phrase("eve", "Saint-Sylvestre. Minuit peut attendre. Une issue bloquée par le traiteur, non."),
+    phrase("eve", "On trinque après la ronde. L’arrêté du 2 mai 2005 n’a pas prévu l’inverse."),
+    phrase("eve", "Bonne fin d’année. Les résolutions du bâtiment sont déjà écrites : évacuer, alerter, laisser entrer les secours.")
+  ]
+};
+
+function easter(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d;
+}
+function keyOf(date) {
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return m + "-" + d;
+}
+
+function eventKey(year, month, day) {
+  const fixed = {
+    "01-01": "newyear",
+    "01-06": "kings",
+    "02-02": "candle",
+    "04-01": "fish",
+    "05-01": "labour",
+    "05-08": "victory",
+    "06-21": "music",
+    "07-14": "bastille",
+    "08-15": "august",
+    "11-01": "saints",
+    "11-11": "armistice",
+    "12-24": "xmasEve",
+    "12-25": "xmas",
+    "12-31": "sylvestre"
+  };
+  const id = String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+  if (fixed[id]) return fixed[id];
+  const eas = easter(year);
+  const today = keyOf(new Date(Date.UTC(year, month - 1, day)));
+  if (keyOf(eas) === today) return "easter";
+  if (keyOf(addDays(eas, 1)) === today) return "eastermon";
+  if (keyOf(addDays(eas, -47)) === today) return "carnival";
+  if (keyOf(addDays(eas, 39)) === today) return "ascent";
+  if (keyOf(addDays(eas, 49)) === today) return "whit";
+  if (keyOf(addDays(eas, 50)) === today) return "whit";
+  return null;
+}
+
+function parisNow() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+  const get = (t) => Number(parts.find((p) => p.type === t).value);
+  return { year: get("year"), month: get("month"), day: get("day"), hour: get("hour") };
+}
+
+function pick(seed, list) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return list[(h >>> 0) % list.length];
+}
+
+const now = parisNow();
+const slot = Math.floor(now.hour / 3);
+const seed = String(now.year) + String(now.month).padStart(2, "0") + String(now.day).padStart(2, "0") + "-" + slot;
+const ev = eventKey(now.year, now.month, now.day);
+const list = ev ? EVENTS[ev] : GENERAL;
+const item = pick(seed, list);
+const tone = TONES[item.tone];
+document.documentElement.style.setProperty("--bg", tone.bg);
+document.documentElement.style.setProperty("--ink", tone.ink);
+document.getElementById("icon").textContent = item.icon;
+document.getElementById("p").textContent = item.text;
+</script>
+</body>
+</html>
